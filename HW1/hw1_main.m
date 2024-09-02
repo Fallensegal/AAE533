@@ -8,7 +8,7 @@ clc;
 
 % Import Necessary Constants
 addpath(genpath('..'));   % Add homework parent directory to import shared functions
-load("standard_gravitation_parameter.mat");
+load("constants.mat");
 
 %% Problem 1
 
@@ -75,6 +75,24 @@ clear orbit_LEO orbit_MEO orbit_GEO_SYNCH orbit_GEO_STAT orbit_GTO
 
 % Define Propagation Properties for Each Orbit Object
 for object_index = 1:length(orbit_array)
-    orbit_array(object_index).orbit_period = orbital_period(MU_EARTH, orbit_array(object_index).semi_major_axis);
+
+    % Calculate Orbital Period
+    orbit_array(object_index).orbit_period = orbital_period(MU_EARTH, ...
+        orbit_array(object_index).semi_major_axis);
+
+    % Set dt, t0, and tend
+    orbit_array(object_index).t0 = 0.0;
+    orbit_array(object_index).tend = 2 * orbit_array(object_index).orbit_period;
+    orbit_array(object_index).dt = 15.0;
+
+    % Calculate ECI Initial Conditions from Orbital Elements
+    orbit_array(object_index).x0 = kepler_to_eci_cartesian(orbit_array(object_index).semi_major_axis, ...
+                                    orbit_array(object_index).inclination, ...
+                                    orbit_array(object_index).RAAN, ...
+                                    orbit_array(object_index).true_anomaly, ...
+                                    orbit_array(object_index).argument_of_perigee, ...
+                                    orbit_array(object_index).eccentricity, ...
+                                    MU_EARTH);
+
 
 end
