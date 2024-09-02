@@ -3,6 +3,7 @@
 % Date: Aug 31st, 2024
 
 %% Initialization
+tic;
 clear;
 clc;
 
@@ -21,7 +22,7 @@ sma = 6796.5e3;             % Semi-major Axis
 t_anomaly = 0;              % True Anomaly
 
 % Define LEO Orbit Class
-orbit_LEO = KeplerOrbitSimple(sma, inc, raan, t_anomaly, arg_perigee, ecc);
+orbit_LEO = KeplerOrbitSimple(sma, inc, raan, t_anomaly, arg_perigee, ecc, MU_EARTH);
 
 % MEO ORBIT
 ecc = 0.00802;              % Eccentricity
@@ -32,7 +33,7 @@ sma = 12543.0e3;            % Semi-major Axis
 t_anomaly = 0;              % True Anomaly
 
 % Define MEO Orbit Class
-orbit_MEO = KeplerOrbitSimple(sma, inc, raan, t_anomaly, arg_perigee, ecc);
+orbit_MEO = KeplerOrbitSimple(sma, inc, raan, t_anomaly, arg_perigee, ecc, MU_EARTH);
 
 % GEO Orbit - Stationary
 ecc = 0.0;                  % Eccentricity
@@ -43,7 +44,7 @@ sma = 42164.0e3;            % Semi-major Axis
 t_anomaly = 0.0;            % True Anomaly
 
 % Define GEO Stationary Orbit Class
-orbit_GEO_STAT = KeplerOrbitSimple(sma, inc, raan, t_anomaly, arg_perigee, ecc);
+orbit_GEO_STAT = KeplerOrbitSimple(sma, inc, raan, t_anomaly, arg_perigee, ecc, MU_EARTH);
 
 % GEO Orbit - Synchronous
 ecc = 0.001;                % Eccentricity
@@ -54,7 +55,7 @@ sma = 42264.0e3;            % Semi-major Axis
 t_anomaly = 0.0;            % True Anomaly
 
 % Define GEO Synch Orbit Class
-orbit_GEO_SYNCH = KeplerOrbitSimple(sma, inc, raan, t_anomaly, arg_perigee, ecc);
+orbit_GEO_SYNCH = KeplerOrbitSimple(sma, inc, raan, t_anomaly, arg_perigee, ecc, MU_EARTH);
 
 % GTO Orbit
 ecc = 0.7312;               % Eccentricity
@@ -65,7 +66,7 @@ sma = 24478.0e3;            % Semi-major Axis
 t_anomaly = 0.0;            % True Anomaly
 
 % Define GTO Orbit Class
-orbit_GTO = KeplerOrbitSimple(sma, inc, raan, t_anomaly, arg_perigee, ecc);
+orbit_GTO = KeplerOrbitSimple(sma, inc, raan, t_anomaly, arg_perigee, ecc, MU_EARTH);
 
 % Populate Orbit Object Parameters
 orbit_array = [orbit_LEO, orbit_MEO, orbit_GEO_STAT, orbit_GEO_SYNCH, orbit_GTO];
@@ -95,4 +96,23 @@ for object_index = 1:length(orbit_array)
                                     MU_EARTH);
 
 
+end
+
+% Generate Orbit in Parallel
+for obj_index = 1:length(orbit_array)
+    [tn, xn] = orbit_array(obj_index).propagate_simple_kepler();
+    orbit_array(obj_index).tn = tn;
+    orbit_array(obj_index).xn = xn;
+end
+toc;
+
+% Generate Orbit Plots
+figure(1)
+for obj_index = 1:length(orbit_array)
+    obj = orbit_array(obj_index);
+    X = obj.xn(:, 1);
+    Y = obj.xn(:, 2);
+    Z = obj.xn(:, 3);
+    plot3(X, Y, Z);
+    hold on
 end
