@@ -1,4 +1,8 @@
-classdef KeplarOrbitSimple
+classdef KeplerOrbitSimple
+    % Orbit Class - Kepler Simple 2-Body
+    % Desc: This class is a definition for holding orbital parameters, orbit generation parameters,
+    % and associated methods in order to succintly organize orbit generation and its outputs.
+    
     properties
         % Keplerian Orbital Elements
         semi_major_axis         double     % [DIM: m]
@@ -18,7 +22,7 @@ classdef KeplarOrbitSimple
     methods
 
         % Class Construction Function
-        function obj = KeplarOrbitSimple(sma, inc, raan, t_anomaly, arg_perigee, ecc)
+        function obj = KeplerOrbitSimple(sma, inc, raan, t_anomaly, arg_perigee, ecc)
             obj.semi_major_axis = sma;
             obj.inclination = inc;
             obj.RAAN = raan;
@@ -27,7 +31,7 @@ classdef KeplarOrbitSimple
             obj.eccentricity = ecc;
         end
 
-        function [tn, xn] = propagate_simple_keplar(orbit_object)
+        function [tn, xn] = propagate_simple_kepler(orbit_object)
 
             % Set numerical integrator options
             options = odeset('Reltol', 1E-12, 'AbsTol', 1E-12, 'InitialStep', orbit_object.dt, 'MaxStep', orbit_object.dt);
