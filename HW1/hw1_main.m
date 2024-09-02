@@ -116,3 +116,20 @@ for obj_index = 1:length(orbit_array)
     plot3(X, Y, Z);
     hold on
 end
+
+% Plot Spherical (Representing Earth)
+earth_radius = 6378e3;        % DIM: [m]
+[x_earth, y_earth, z_earth] = sphere;
+x_earth = x_earth * earth_radius;
+y_earth = y_earth * earth_radius;
+z_earth = z_earth * earth_radius;
+surf(x_earth, y_earth, z_earth, 'FaceColor', 'b');
+axis equal;
+
+% Set Figure Attributes
+title("Orbit Classes with Respect to Earth ECI (Wasif Islam)");
+xlabel("R1 [meters]");
+ylabel("R2 [meters]");
+zlabel("R3 [meters]");
+grid("on");
+legend('LEO', 'MEO', 'GEO (Stationary)', 'GEO (Synchronous)', 'GTO', 'Location', 'eastoutside');
