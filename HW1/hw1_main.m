@@ -66,3 +66,15 @@ t_anomaly = 0.0;            % True Anomaly
 
 % Define GTO Orbit Class
 orbit_GTO = KeplerOrbitSimple(sma, inc, raan, t_anomaly, arg_perigee, ecc);
+
+% Populate Orbit Object Parameters
+orbit_array = [orbit_LEO, orbit_MEO, orbit_GEO_STAT, orbit_GEO_SYNCH, orbit_GTO];
+
+% Clearing Duplicate Object Variables
+clear orbit_LEO orbit_MEO orbit_GEO_SYNCH orbit_GEO_STAT orbit_GTO
+
+% Define Propagation Properties for Each Orbit Object
+for object_index = 1:length(orbit_array)
+    orbit_array(object_index).orbit_period = orbital_period(MU_EARTH, orbit_array(object_index).semi_major_axis);
+
+end
