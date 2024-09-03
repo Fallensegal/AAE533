@@ -1,2 +1,5 @@
 # Remove Variable Files
 *.mat
+*.asv
+*.pdf
+*.png

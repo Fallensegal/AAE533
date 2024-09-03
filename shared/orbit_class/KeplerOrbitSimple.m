@@ -13,11 +13,17 @@ classdef KeplerOrbitSimple
         eccentricity            double     % [DIM: N/A]
 
         % Propagation Properties
+        mu                      double     % [DIM: m^3/s^2]
         orbit_period            double     % [DIM: sec]
         dt                      double     % [DIM: sec]
         t0                      double     % [DIM: sec]
         tend                    double     % [DIM: sec]
-        x0              (1,6)   double     % [DIM: (1,:3) m, (1,3:6) m/s] - CARTESIAN COORDS
+        x0              (6,1)   double     % [DIM: (:3, 1) m, (3:6, 1) m/s] - CARTESIAN COORDS
+
+        % Generated Orbit Properties
+        xn                      double     % [DIM: (:3, 1) m, (3:6, 1) m/s]
+        tn                      double     % [DIM: sec]
+      
     end
     methods
 
@@ -35,13 +41,14 @@ classdef KeplerOrbitSimple
         %   obj: Instance of KeplerOrbitSimple class with keplerian orbital elements initialized
         %
 
-        function obj = KeplerOrbitSimple(sma, inc, raan, t_anomaly, arg_perigee, ecc)
+        function obj = KeplerOrbitSimple(sma, inc, raan, t_anomaly, arg_perigee, ecc, mu)
             obj.semi_major_axis = sma;
             obj.inclination = inc;
             obj.RAAN = raan;
             obj.true_anomaly = t_anomaly;
             obj.argument_of_perigee = arg_perigee;
             obj.eccentricity = ecc;
+            obj.mu = mu;
         end
 
         % Orbit Propagation Method
@@ -60,7 +67,7 @@ classdef KeplerOrbitSimple
             options = odeset('Reltol', 1E-12, 'AbsTol', 1E-12, 'InitialStep', orbit_object.dt, 'MaxStep', orbit_object.dt);
 
             % Generate orbit
-            [tn, xn] = ode45('simple_kepler_orbit_pde', [orbit_object.t0, orbit_object.tend], orbit_object.x0, options);
+            [tn, xn] = ode45(@(t, r_state) simple_kepler_orbit_pde(r_state, orbit_object.mu), [orbit_object.t0, orbit_object.tend], orbit_object.x0, options);
         end
 
     end
