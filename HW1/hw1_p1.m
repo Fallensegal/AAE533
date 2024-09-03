@@ -113,7 +113,7 @@ for obj_index = 1:length(orbit_array)
     X = obj.xn(:, 1);
     Y = obj.xn(:, 2);
     Z = obj.xn(:, 3);
-    plot3(X, Y, Z);
+    plot3(X, Y, Z, 'LineWidth', 2);
     hold on
 end
 
@@ -123,7 +123,7 @@ earth_radius = 6378e3;        % DIM: [m]
 x_earth = x_earth * earth_radius;
 y_earth = y_earth * earth_radius;
 z_earth = z_earth * earth_radius;
-surf(x_earth, y_earth, z_earth, 'FaceColor', 'b');
+surf(x_earth, y_earth, z_earth, 'FaceColor', 'k');
 axis equal;
 
 % Set Figure Attributes
