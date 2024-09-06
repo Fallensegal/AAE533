@@ -182,8 +182,7 @@ legend()
 grid on
 title(title4)
 
-%% Problem 2b
-
 %% Problem 2d
+
 
 
