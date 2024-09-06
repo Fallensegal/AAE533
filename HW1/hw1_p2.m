@@ -99,6 +99,13 @@ sat_range_error = sat_range_calc - station_data.SAT_RANGE;
 % Use Equation 2.37 to solve for azimuth and elevation
 hour_angle = LMST - deg2rad(topo_ra);           % Calculate hour angle [rad]
 
+% Topocentric Local Meridian X, Y, Z frame
+tclm_sat = tce2tclm(station_data.GEOD_LAT, topo_dec, hour_angle);
+
+% Calculate Azimuth and Elevation
+[az_calc, elev_calc] = tclm2ah(tclm_sat, length(LMST));
+
+% Calculate Error between Calculated Az, Elev and Reference
 
 % Generate Error Graphs
 
