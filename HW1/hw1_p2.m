@@ -32,6 +32,8 @@ station_data.SATX_ECI = coordinate_data.SatelliteXECI_Km_;
 station_data.SATY_ECI = coordinate_data.SatelliteYECI_Km_;
 station_data.SATZ_ECI = coordinate_data.SatelliteZECI_Km_;
 station_data.SAT_RANGE = coordinate_data.SatelliteRange_Km_;
+station_data.AZ = coordinate_data.SatelliteAzimuth_deg_;
+station_data.ELEV = coordinate_data.SatelliteElevation_deg_;
 
 % Define Cell Arrays for ECI XYZ Coords for Station and Satellite
 sat_eci = cell(length(station_data.StationX_ECEF), 1);
@@ -48,7 +50,17 @@ for sample_length = 1:length(station_data.StationX_ECEF)
     stat_eci{sample_length} = stat_XYZ;
 end
 
-%% Problem 2a
+
+% Question Flag:
+switch_geoc_geod = false;       % For problem 2b, flag to switch geocentric
+                                % latitude with geodedic and vice versa
+if switch_geoc_geod
+     temp = station_data.GEOC_LAT;
+     station_data.GEOC_LAT = station_data.GEOD_LAT;
+     station_data.GEOD_LAT = temp;
+end
+
+%% Problem 2a/b
 
 % Calculate Local and Greenwich Mean Sidereal Time
 [GMST, LMST] = mjd2sidereal(station_data.MJD, station_data.GEOC_LONG);
@@ -62,14 +74,10 @@ stat_eci_error = zeros(length(LMST), 1);   % Pre-allocating error term array
 for matrix_index = 1:length(LMST)
 
     % Acquire ECI Coordinates for Station
-    RT = [R .* cos(deg2rad(station_data.GEOC_LAT(matrix_index))) .* cos(LMST(matrix_index)); ...
-          R .* cos(deg2rad(station_data.GEOC_LAT(matrix_index))) * sin(LMST(matrix_index)); ...
-          R .* sin(deg2rad(station_data.GEOC_LAT(matrix_index)))];
-
-    stat_eci_calc{matrix_index} = RT;       % R_topo
-
+    stat_eci_calc{matrix_index} = lmst_lat2R_topo(R, station_data.GEOC_LAT(matrix_index), ...
+                                                  LMST(matrix_index));
     % Calculate error between derived and actual
-    stat_eci_error(matrix_index) = norm(RT - stat_eci{matrix_index});
+    stat_eci_error(matrix_index) = norm(stat_eci_calc{matrix_index} - stat_eci{matrix_index});
 
 end
 
@@ -106,8 +114,73 @@ tclm_sat = tce2tclm(station_data.GEOD_LAT, topo_dec, hour_angle);
 [az_calc, elev_calc] = tclm2ah(tclm_sat, length(LMST));
 
 % Calculate Error between Calculated Az, Elev and Reference
+az_error = az_calc - station_data.AZ;
+elev_error = elev_calc - station_data.ELEV;
 
 % Generate Error Graphs
+if ~switch_geoc_geod
+    title1 = "Station ECI Coordinate Error (Calculated vs. Given)";
+    title2 = "Satellite Range (\rho) Calculation Error";
+    title3 = "r_{topo} Calculation Error (Calculated using RA/Declination)";
+    title4 = "Azimuth and Elevation Error from Reference";
+else
+    title1 = "Station ECI Coordinate Error (Incorrect Latitude)";
+    title2 = "Satellite Range (\rho) Calculation Error (Incorrect Latitude)";
+    title3 = "r_{topo} Calculation Error (Incorrect Latitude)";
+    title4 = "Azimuth and Elevation Error from Reference (Incorrect Latitude)";
+end
+figure(1)
+
+% ECI Coordinate Calculation Errors
+subplot(2,2,1)
+plot(LMST, stat_eci_error, 'bo')
+yline(0.5, '--', {'0.5KM'})
+yline(-0.5, '--', {'-0.5KM'}, 'LabelVerticalAlignment', 'bottom')
+if ~switch_geoc_geod
+    ylim([-2, 2])
+end
+xlabel("Local Sidereal TIme [rad]")
+ylabel("Norm Error [km]")
+grid on
+title(title1);
+
+% Sat Range from Topocenter Error
+subplot(2,2,2)
+plot(LMST, sat_range_error, 'ro')
+yline(1, '--', {'1KM'})
+yline(-1, '--', {'-1KM'}, 'LabelVerticalAlignment', 'bottom')
+if ~switch_geoc_geod
+    ylim([-2, 2])
+end
+xlabel("Local Sidereal Time [rad]")
+ylabel("Norm Error [km]")
+grid on
+title(title2);
+
+% Satellite r_{topo} Calculation Error
+subplot(2,2,3)
+plot(LMST, dec_ra_error_mag, 'mo')
+yline(0.5, '--', {'0.5KM'})
+yline(-0.5, '--', {'-0.5KM'}, 'LabelVerticalAlignment', 'bottom')
+if ~switch_geoc_geod
+    ylim([-2, 2])
+end
+xlabel("Local Sidereal Time [rad]")
+ylabel("Norm Error [km]")
+grid on
+title(title3)
+
+% Azimuth and Elevation Calculation Error
+subplot(2,2,4)
+plot(LMST, az_error, 'LineStyle', 'none', 'Marker', 'o', 'DisplayName', "Azimuth Error [deg]")
+hold on
+plot(LMST, elev_error, 'LineStyle', 'none', 'Marker','.', 'MarkerSize', 12, 'DisplayName', "Elevation Error [deg]")
+hold off
+xlabel("Local Sidereal Time [rad]")
+ylabel("Error [deg]")
+legend()
+grid on
+title(title4)
 
 %% Problem 2b
 
