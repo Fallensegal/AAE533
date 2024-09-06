@@ -1,4 +1,14 @@
-% 
+% Function: kepler_to_eci_cartesian
+% Desc: Calculate X,Y,Z coordinates in the ECI frame from kepler elements
+% Inputs:
+%   sma: semi-major axis                    [m]
+%   inc: inclination                        [deg]
+%   raan: right ascension ascending node    [deg]
+%   t_anom: true anomaly                    [deg]
+%   arg_perigee: argument of perigee        [deg]
+%   ecc: eccentricity                       [N/A]
+%   MU_EARTH: standard grav. param.         [m^3/s^2]
+
 function [cart_state_vector] = kepler_to_eci_cartesian(sma, inc, raan, t_anom, arg_perigee, ecc, MU_EARTH)
 
     % Initialize Varibles
