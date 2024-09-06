@@ -66,7 +66,7 @@ for matrix_index = 1:length(LMST)
           R .* cos(deg2rad(station_data.GEOC_LAT(matrix_index))) * sin(LMST(matrix_index)); ...
           R .* sin(deg2rad(station_data.GEOC_LAT(matrix_index)))];
 
-    stat_eci_calc{matrix_index} = RT;
+    stat_eci_calc{matrix_index} = RT;       % R_topo
 
     % Calculate error between derived and actual
     stat_eci_error(matrix_index) = norm(RT - stat_eci{matrix_index});
@@ -76,26 +76,29 @@ end
 % Calculate Range
 sat_range_calc = zeros(length(LMST), 1);
 r_topo = cell(length(LMST), 1);               % eq. 2.28 in the script
+topo_dec = zeros(length(LMST), 1);
+topo_ra = zeros(length(LMST), 1);
 for sample_index = 1:length(LMST)
     dist_array = sat_eci{sample_index} - stat_eci_calc{sample_index};
-    range = norm(dist_array);
+    range = norm(dist_array);       
+    l_hat = dist_array ./ range;        
     sat_range_calc(sample_index) = range;
+
+    % Calculate Topocentric Declination and RA (Right Ascension) [deg]
+    topo_dec(sample_index) = asind(l_hat(3));
+    topo_ra(sample_index) = atan2d(l_hat(2), l_hat(1)); 
     r_topo{sample_index} = dist_array;
 end
 
 % Calculate Error for Range
 sat_range_error = sat_range_calc - station_data.SAT_RANGE;
 
-% Subtract Rtopo from total r, divide by range, get l-hat
-topo_dec = zeros(length(LMST), 1);
-for sample_index = 1:length(LMST)
-    r_topo_vec = r_topo{sample_index};
-    topo_dec(sample_index) = rad2deg(asin(r_topo_vec(3) / sat_range_calc(sample_index)));
-end
-
-% solve for delta, raan
+% Reverse calculate r_topo and r, then calculate error
+[dec_ra_error_mag] = verify_topo_coordinates(sat_eci, stat_eci, topo_dec, topo_ra);
 
 % Use Equation 2.37 to solve for azimuth and elevation
+hour_angle = LMST - deg2rad(topo_ra);           % Calculate hour angle [rad]
+
 
 % Generate Error Graphs
 
