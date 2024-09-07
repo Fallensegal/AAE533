@@ -182,6 +182,19 @@ legend()
 grid on
 title(title4)
 
+if ~switch_geoc_geod
+    % Generate Calculation Artifacts
+    headers = {'MJD', 'GMST [rad]', 'LMST [rad]', 'Topocentric Declination [deg]', ...
+                'Topocentric RA [deg]', 'Azimuth [deg]', 'Elevation [deg]'};
+    data = [station_data.MJD, GMST, LMST, topo_dec, topo_ra, az_calc, elev_calc];
+    
+    % Convert Array to Table
+    dataTable = array2table(data, 'VariableNames', headers);
+    
+    % Write to CSV
+    writetable(dataTable, 'hw1p2a.csv');
+end
+
 %% Problem 2d
 
 
