@@ -1,37 +1,34 @@
-function verify_az_elev(az, el, phi, tau, delta)
+% Function: verify_az_elev
+% Desc: From Azimuth and Elevation calculate TCLM XYZ coordinates and
+% compare them with tclm coordinates calculated from topocentric equatorial
+% parameters
+%
+% Inputs:
+%  tclm_coords: Cell matrix of TCLM coords from equatorial parameters
+%  sample_length: number of data samples
+%  az_calc: TCLM azimuth [deg]
+%  elev_calc: TCLM elevation [deg]
+function verify_az_elev(tclm_coords, az_calc, elev_calc, sample_length)
+
     % Convert degrees to radians
-    az_rad = deg2rad(az);
-    el_rad = deg2rad(el);
+    az_rad = deg2rad(180-az_calc);     % Need to account for right-handedness
+    elev_rad = deg2rad(elev_calc);
     
-    % Adjust azimuth for right-handed system (measured eastward from north)
-    az_rad = mod(2*pi - az_rad, 2*pi);
     
-    % Verify equations from Image 1, adapted for right-handed system
-    eq1_lhs = cos(el_rad) .* sin(az_rad);  % Note: cos(a) becomes sin(a) due to 90° shift
-    eq1_rhs = sin(phi) .* cos(delta) .* cos(tau) - cos(phi) .* sin(delta);
-    eq1_diff = abs(eq1_lhs - eq1_rhs);
-    
-    eq2_lhs = cos(el_rad) .* cos(az_rad);  % Note: sin(a) becomes cos(a) due to 90° shift
-    eq2_rhs = cos(delta) .* sin(tau);
-    eq2_diff = abs(eq2_lhs - eq2_rhs);
-    
-    eq3_lhs = sin(el_rad);
-    eq3_rhs = sin(phi) .* sin(delta) + cos(phi) .* cos(delta) .* cos(tau);
-    eq3_diff = abs(eq3_lhs - eq3_rhs);
-    
-    % Display results
-    disp('Verification Results (Right-handed System):');
-    disp(['Equation 1 max difference: ', num2str(max(eq1_diff))]);
-    disp(['Equation 2 max difference: ', num2str(max(eq2_diff))]);
-    disp(['Equation 3 max difference: ', num2str(max(eq3_diff))]);
-    
-    % Set a tolerance for floating-point comparisons
-    tol = 1e-6;
-    
-    if all(eq1_diff < tol) && all(eq2_diff < tol) && all(eq3_diff < tol)
-        disp('Verification PASSED: Azimuth and Elevation are correct within tolerance.');
-    else
-        disp('Verification FAILED: Azimuth and Elevation do not satisfy the equations.');
-        % Optionally, you can add more detailed error reporting here
+    % Equation Script 37 Left-Hand Side
+    eq1_lhs = cos(elev_rad) .* cos(az_rad);
+    eq2_lhs = cos(elev_rad) .* sin(az_rad);
+    eq3_lhs = sin(elev_rad);
+
+    reconstructed_tclm = [eq1_lhs, eq2_lhs, eq3_lhs];
+
+    tol = 1e-10;        % Setting Reconstruction Error
+    for sample_index = 1:sample_length
+        diff = reconstructed_tclm(sample_index, :) - tclm_coords{sample_index}';
+        disp(['Unit Vector Reconstruction Error: ', num2str(norm(diff))]);
+        if diff < tol
+            disp('Verification PASSED: Azimuth and Elevation are correct within tolerance.');
+        else
+             disp('Verification FAILED: Azimuth and Elevation do not satisfy the equations.');
+        end
     end
-end
