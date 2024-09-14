@@ -18,7 +18,7 @@ OBSERVATION_TIME = datetime(2024, 09, 06, 04, 30, 00, 'TimeZone', 'UTC');
 INTEGRAL_DURATION_SEC = seconds(OBSERVATION_TIME - STARTING_TIME);
 
 % Initialize Orbit Class
-sma = 6782.5;         % [km]
+sma = 6782.5e3;       % [m]
 ecc = 0.001;          % [NA]
 inc = 51.5;           % [deg]
 true_anom = 5;        % [deg]
@@ -28,7 +28,7 @@ RAAN = 10;            % [deg]
 orbit_object = KeplerOrbitSimple(sma, inc, RAAN, true_anom, arg_perigee, ecc, MU_EARTH);
 orbit_object.t0 = 0.0;
 orbit_object.tend = INTEGRAL_DURATION_SEC;
-orbit_object.dt = 100.0;
+orbit_object.dt = 15.0;
 orbit_object.x0 = kepler_to_eci_cartesian(orbit_object.semi_major_axis, ...
                                     orbit_object.inclination, ...
                                     orbit_object.RAAN, ...
@@ -41,16 +41,10 @@ orbit_object.x0 = kepler_to_eci_cartesian(orbit_object.semi_major_axis, ...
 orbit_object.tn = tn;
 orbit_object.xn = xn;
 
+% Extract Final State (X, Y, Z)
+observation_position_eci = xn(end, 1:3);
     
-    % orbit_array(object_index).x0 = kepler_to_eci_cartesian(orbit_array(object_index).semi_major_axis, ...
-    %                                 orbit_array(object_index).inclination, ...
-    %                                 orbit_array(object_index).RAAN, ...
-    %                                 orbit_array(object_index).true_anomaly, ...
-    %                                 orbit_array(object_index).argument_of_perigee, ...
-    %                                 orbit_array(object_index).eccentricity, ...
-    %                                 MU_EARTH);
-
-% Generate Orbit to Find Position
+% Acquire Station ECEF Position
 
 % Calculate Observation Sidereal Time
 MJD = juliandate(OBSERVATION_TIME) - MJD_MODIFIER;
