@@ -97,7 +97,6 @@ sat_tod = TOD_MATRIX * sat_eci_fixed;
 stat_tod = TOD_MATRIX * rj2000_fixed;
 [ra_tod, dec_tod] = ECI2DEC_RA(sat_tod, stat_tod);
 
-% Calculate 
 
 
 
