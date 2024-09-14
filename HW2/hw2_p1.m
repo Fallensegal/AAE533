@@ -10,7 +10,7 @@ clc;
 addpath(genpath('..'));   % Add homework parent directory to import shared functions
 load("constants.mat");
 
-%% Problem One
+%% Problem One - A
 
 % Station Properties
 GD_LAT = 40.43157;          % Geodedic Latitude [deg]
@@ -66,4 +66,48 @@ MJD_UTC = JD_UTC - MJD_MODIFIER;
 
 rj2000 = ITRF2J2000(R_ECEF, JD_UTC, JD_TT, GMST, MJD_MODIFIER);
 
-% Calculate Right Ascension and Declination
+% Calculate Right Ascension and Declination, Az, El
+[ra, dec] = ECI2DEC_RA(observation_position_eci, rj2000);
+hour_angle = LMST - deg2rad(ra);
+tclm_coords = tce2tclm(GD_LAT, dec, hour_angle);
+[az, elev] = tclm2ah(tclm_coords, 1);
+
+%% Problem One: B
+
+precession_matrix = calc_precession(JD_TT);
+nutation_matrix = calc_nutation(JD_TT);
+TOD_MATRIX = nutation_matrix * precession_matrix;
+
+range_eci = norm(observation_position_eci - rj2000);
+
+% Calculate tau and t_satellite
+tau_light = range_eci / c;
+t_sat = tn(end) - tau_light;
+
+% Propagate Until OBS_TIME - T_SAT
+orbit_object.tend = INTEGRAL_DURATION_SEC - t_sat;
+[tn, xn] = orbit_object.propagate_simple_kepler();
+
+% Recalculate RJ2000 with Respect to Accurate GMST
+GMST_fixed = deg2rad(sec2deg(tau_light));
+rj2000_fixed = ITRF2J2000(R_ECEF, JD_UTC, JD_TT, GMST_fixed, MJD_MODIFIER);
+sat_eci_fixed = xn(end, 1:3)';
+
+sat_tod = TOD_MATRIX * sat_eci_fixed;
+stat_tod = TOD_MATRIX * rj2000_fixed;
+[ra_tod, dec_tod] = ECI2DEC_RA(sat_tod, stat_tod);
+
+% Calculate 
+
+
+
+
+
+
+
+
+
+
+
+
+
