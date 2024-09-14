@@ -12,6 +12,11 @@ load("constants.mat");
 
 %% Problem One
 
+% Station Properties
+GD_LAT = 40.43157;          % Geodedic Latitude [deg]
+GD_LONG = 273.085549;       % Geodedic Longitude [deg]
+STATION_ALT = 192.5;        % Station Altitude [m]
+
 % Convert Time to Acquire Sidereal Time at Local Observation
 STARTING_TIME = datetime(2024, 09, 05, 12, 00, 00, 'TimeZone', 'UTC');
 OBSERVATION_TIME = datetime(2024, 09, 06, 04, 30, 00, 'TimeZone', 'UTC');
@@ -45,7 +50,11 @@ orbit_object.xn = xn;
 observation_position_eci = xn(end, 1:3);
     
 % Acquire Station ECEF Position
+R_ECEF = GDLL2ECEF(GD_LAT, GD_LONG, STATION_ALT);
+
+% Calculate GC LAT/LONG
+[GC_LAT, GC_LONG] = ECEF2GCLL(R_ECEF);
 
 % Calculate Observation Sidereal Time
 MJD = juliandate(OBSERVATION_TIME) - MJD_MODIFIER;
-%[GMST, LMST] = mjd2sidereal(MJD, )
+[GMST, LMST] = mjd2sidereal(MJD, GD_LONG);
