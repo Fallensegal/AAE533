@@ -20,6 +20,9 @@ STATION_ALT = 192.5;        % Station Altitude [m]
 % Convert Time to Acquire Sidereal Time at Local Observation
 STARTING_TIME = datetime(2024, 09, 05, 12, 00, 00, 'TimeZone', 'UTC');
 OBSERVATION_TIME = datetime(2024, 09, 06, 04, 30, 00, 'TimeZone', 'UTC');
+
+% UTC to TT Based on Script 2.5
+OBSERVATION_TIME_TT = OBSERVATION_TIME + timedelta(seconds=64.184);
 INTEGRAL_DURATION_SEC = seconds(OBSERVATION_TIME - STARTING_TIME);
 
 % Initialize Orbit Class
@@ -56,5 +59,9 @@ R_ECEF = GDLL2ECEF(GD_LAT, GD_LONG, STATION_ALT);
 [GC_LAT, GC_LONG] = ECEF2GCLL(R_ECEF);
 
 % Calculate Observation Sidereal Time
-MJD = juliandate(OBSERVATION_TIME) - MJD_MODIFIER;
-[GMST, LMST] = mjd2sidereal(MJD, GD_LONG);
+JD_UTC = juliandate(OBSERVATION_TIME);
+JD_TT = juliandate(OBSERVATION_TIME_TT);
+MJD_UTC = juliandate(JD_UTC) - MJD_MODIFIER;
+[GMST, LMST] = mjd2sidereal(MJD_UTC, GD_LONG);
+
+% Calculate Precsion/Nutation/Polar Motion
