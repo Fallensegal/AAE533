@@ -18,6 +18,6 @@ function [r_J2000] = ITRF2J2000(r_topocentric, JD_UTC, JD_TT, GMST, MJD_MODIFIER
                           0,         0,  1];
 
     r_J2000 = precession_matrix' * nutation_matrix' * theta_matrix ...
-        * polar_motion_matrix' * r_topocentric';
+        * polar_motion_matrix' * r_topocentric;
 end
 

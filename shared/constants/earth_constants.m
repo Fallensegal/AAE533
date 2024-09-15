@@ -1,0 +1,1 @@
+GEO_HEIGHT = 35786e3;       % Geostationary Height [m]
