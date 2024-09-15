@@ -50,13 +50,10 @@ orbit_object.tn = tn;
 orbit_object.xn = xn;
 
 % Extract Final State (X, Y, Z)
-observation_position_eci = xn(end, 1:3);
+observation_position_eci = xn(end, 1:3)';
     
 % Acquire Station ECEF Position
-R_ECEF = GDLL2ECEF(GD_LAT, GD_LONG, STATION_ALT);
-
-% Calculate GC LAT/LONG
-[GC_LAT, GC_LONG] = ECEF2GCLL(R_ECEF);
+R_ECEF = GDLL2ECEF(GD_LAT, GD_LONG, STATION_ALT)';
 
 % Calculate Observation Sidereal Time
 JD_UTC = juliandate(OBSERVATION_TIME);
@@ -83,18 +80,20 @@ range_eci = norm(observation_position_eci - rj2000);
 % Calculate tau and t_satellite
 tau_light = range_eci / c;
 t_sat = tn(end) - tau_light;
-
-% Propagate Until OBS_TIME - T_SAT
-orbit_object.tend = INTEGRAL_DURATION_SEC - t_sat;
+orbit_object.tend = t_sat;
 [tn, xn] = orbit_object.propagate_simple_kepler();
 
-% Recalculate RJ2000 with Respect to Accurate GMST
-GMST_fixed = deg2rad(sec2deg(tau_light));
-rj2000_fixed = ITRF2J2000(R_ECEF, JD_UTC, JD_TT, GMST_fixed, MJD_MODIFIER);
-sat_eci_fixed = xn(end, 1:3)';
+% Fix Times
+JD_UTC_FIX = juliandate(OBSERVATION_TIME - seconds(tau_light));
+JD_TT_FIX = juliandate(OBSERVATION_TIME + seconds(64.184) - seconds(tau_light));
+MJD_UTC_FIX = JD_UTC_FIX - MJD_MODIFIER;
+[GMST_FIX, ~] = mjd2sidereal(MJD_UTC_FIX, GD_LONG);
 
-sat_tod = TOD_MATRIX * sat_eci_fixed;
-stat_tod = TOD_MATRIX * rj2000_fixed;
+rj2000_fix = ITRF2J2000(R_ECEF, JD_UTC_FIX, JD_TT_FIX, GMST_FIX, MJD_MODIFIER);
+sat_eci_fix = xn(end, 1:3)';
+
+sat_tod = TOD_MATRIX * sat_eci_fix;
+stat_tod = TOD_MATRIX * rj2000_fix;
 [ra_tod, dec_tod] = ECI2DEC_RA(sat_tod, stat_tod);
 
 
