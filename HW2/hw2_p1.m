@@ -10,7 +10,7 @@ clc;
 addpath(genpath('..'));   % Add homework parent directory to import shared functions
 load("constants.mat");
 
-%% Problem One
+%% Problem One - A
 
 % Station Properties
 GD_LAT = 40.43157;          % Geodedic Latitude [deg]
@@ -22,7 +22,7 @@ STARTING_TIME = datetime(2024, 09, 05, 12, 00, 00, 'TimeZone', 'UTC');
 OBSERVATION_TIME = datetime(2024, 09, 06, 04, 30, 00, 'TimeZone', 'UTC');
 
 % UTC to TT Based on Script 2.5
-OBSERVATION_TIME_TT = OBSERVATION_TIME + timedelta(seconds=64.184);
+OBSERVATION_TIME_TT = OBSERVATION_TIME + seconds(64.184);
 INTEGRAL_DURATION_SEC = seconds(OBSERVATION_TIME - STARTING_TIME);
 
 % Initialize Orbit Class
@@ -50,18 +50,62 @@ orbit_object.tn = tn;
 orbit_object.xn = xn;
 
 % Extract Final State (X, Y, Z)
-observation_position_eci = xn(end, 1:3);
+observation_position_eci = xn(end, 1:3)';
     
 % Acquire Station ECEF Position
-R_ECEF = GDLL2ECEF(GD_LAT, GD_LONG, STATION_ALT);
-
-% Calculate GC LAT/LONG
-[GC_LAT, GC_LONG] = ECEF2GCLL(R_ECEF);
+R_ECEF = GDLL2ECEF(GD_LAT, GD_LONG, STATION_ALT)';
 
 % Calculate Observation Sidereal Time
 JD_UTC = juliandate(OBSERVATION_TIME);
 JD_TT = juliandate(OBSERVATION_TIME_TT);
-MJD_UTC = juliandate(JD_UTC) - MJD_MODIFIER;
+MJD_UTC = JD_UTC - MJD_MODIFIER;
 [GMST, LMST] = mjd2sidereal(MJD_UTC, GD_LONG);
 
-% Calculate Precsion/Nutation/Polar Motion
+rj2000 = ITRF2J2000(R_ECEF, JD_UTC, JD_TT, GMST, MJD_MODIFIER);
+
+% Calculate Right Ascension and Declination, Az, El
+[ra, dec] = ECI2DEC_RA(observation_position_eci, rj2000);
+hour_angle = LMST - deg2rad(ra);
+tclm_coords = tce2tclm(GD_LAT, dec, hour_angle);
+[az, elev] = tclm2ah(tclm_coords, 1);
+
+%% Problem One: B
+
+precession_matrix = calc_precession(JD_TT);
+nutation_matrix = calc_nutation(JD_TT);
+TOD_MATRIX = nutation_matrix * precession_matrix;
+
+range_eci = norm(observation_position_eci - rj2000);
+
+% Calculate tau and t_satellite
+tau_light = range_eci / c;
+t_sat = tn(end) - tau_light;
+orbit_object.tend = t_sat;
+[tn, xn] = orbit_object.propagate_simple_kepler();
+
+% Fix Times
+JD_UTC_FIX = juliandate(OBSERVATION_TIME - seconds(tau_light));
+JD_TT_FIX = juliandate(OBSERVATION_TIME + seconds(64.184) - seconds(tau_light));
+MJD_UTC_FIX = JD_UTC_FIX - MJD_MODIFIER;
+[GMST_FIX, ~] = mjd2sidereal(MJD_UTC_FIX, GD_LONG);
+
+rj2000_fix = ITRF2J2000(R_ECEF, JD_UTC_FIX, JD_TT_FIX, GMST_FIX, MJD_MODIFIER);
+sat_eci_fix = xn(end, 1:3)';
+
+sat_tod = TOD_MATRIX * sat_eci_fix;
+stat_tod = TOD_MATRIX * rj2000_fix;
+[ra_tod, dec_tod] = ECI2DEC_RA(sat_tod, stat_tod);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
