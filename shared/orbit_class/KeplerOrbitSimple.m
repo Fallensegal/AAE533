@@ -5,15 +5,15 @@ classdef KeplerOrbitSimple
 
     properties
         % Keplerian Orbital Elements
-        semi_major_axis         double     % [DIM: m]
-        inclination             double     % [DIM: deg]     
-        RAAN                    double     % [DIM: deg]
-        true_anomaly            double     % [DIM: deg]
-        argument_of_perigee     double     % [DIM: deg]
-        eccentricity            double     % [DIM: N/A]
+        semi_major_axis = 0.0;             % [DIM: m]
+        inclination = 0.0                  % [DIM: deg]     
+        RAAN = 0.0                         % [DIM: deg]
+        true_anomaly = 0.0                 % [DIM: deg]
+        argument_of_perigee = 0.0          % [DIM: deg]
+        eccentricity = 0.0                 % [DIM: N/A]
 
         % Propagation Properties
-        mu                      double     % [DIM: m^3/s^2]
+        mu = 0.0                           % [DIM: m^3/s^2]
         orbit_period            double     % [DIM: sec]
         dt                      double     % [DIM: sec]
         t0                      double     % [DIM: sec]
@@ -42,13 +42,15 @@ classdef KeplerOrbitSimple
         %
 
         function obj = KeplerOrbitSimple(sma, inc, raan, t_anomaly, arg_perigee, ecc, mu)
-            obj.semi_major_axis = sma;
-            obj.inclination = inc;
-            obj.RAAN = raan;
-            obj.true_anomaly = t_anomaly;
-            obj.argument_of_perigee = arg_perigee;
-            obj.eccentricity = ecc;
-            obj.mu = mu;
+            if nargin > 0
+                obj.semi_major_axis = sma;
+                obj.inclination = inc;
+                obj.RAAN = raan;
+                obj.true_anomaly = t_anomaly;
+                obj.argument_of_perigee = arg_perigee;
+                obj.eccentricity = ecc;
+                obj.mu = mu;
+            end
         end
 
         % Orbit Propagation Method

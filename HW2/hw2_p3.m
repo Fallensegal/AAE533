@@ -13,7 +13,7 @@ load("constants.mat");
 GEO_HEIGHT = 35786e3;       % Geostationary Height [m]
 GD_LAT = 40.43157;          % Geodedic Latitude [deg]
 GD_LONG = 273.085549;       % Geodedic Longitude [deg]
-STATION_ALT = 192.5e3;      % Station Altitude [km]
+STATION_ALT = 192.5e-3;      % Station Altitude [km]
 
 %% Problem 3a
 
