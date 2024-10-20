@@ -3,10 +3,12 @@
 % Earth
 %
 % Inputs:
-%   mu: 
+%   mu:     graviational parameter struct
+%   srp:    parameters related to satellite SRP
+%   drag:   parameters related to satellite drag
 %
 % Outputs:
-%
+%   dxdt:   satellite state
 %
 
 function [dxdt] = Kepler_Peturbations(t, r_state, mu, srp, drag, start_epoch)
