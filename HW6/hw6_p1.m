@@ -37,41 +37,41 @@ iss_state = [1206.536023117490; 6341.948632667270; 2103.445062025980; ...
 tspan = [0, 10*ISS_PERIOD];
 options = odeset('RelTol',1e-12,'AbsTol',1e-12);
 
-% % Perform Integration
-% [tx, Y] = ode45(@(t, r_state) Kepler_Peturbations(t, r_state, mu, srp, drag, start_epoch), ...
-%                                                  tspan, iss_state, options);
-% [tx1, Y1] = ode45(@(t, r_state) simple_kepler_orbit_pde(r_state, mu.earth), tspan, iss_state, options);
-% 
-% % Plot The ISS
-% figure(1)
-% earth_radius = 6378e3;        % DIM: [m]
-% [x_earth, y_earth, z_earth] = sphere;
-% x_earth = x_earth * earth_radius;
-% y_earth = y_earth * earth_radius;
-% z_earth = z_earth * earth_radius;
-% surf(x_earth, y_earth, z_earth, 'FaceColor', 'k');
-% axis equal;
-% hold on
-% plot3(Y(:,1), Y(:,2), Y(:,3), 'DisplayName', 'With Perturbations')
-% plot3(Y1(:,1), Y1(:,2), Y1(:,3), 'DisplayName', 'Without Perturbations')
-% hold off
-% title("ISS Orbit with Perturbations: Wasif Islam")
-% xlabel("R1 [meters]");
-% ylabel("R2 [meters]");
-% zlabel("R3 [meters]");
-% grid("on");
-% legend()
-% 
-% % Position Difference between 2-body and Perturbed
-% position_diff = [Y(:,1) Y(:,2) Y(:,3)] - [Y1(:,1) Y1(:,2) Y1(:,3)];
-% diff_norm = vecnorm(position_diff, 2, 2);
-% 
-% figure(2)
-% plot(tx(1:26500), diff_norm(1:26500))
-% title("L_{2} Norm Difference between Perturbed and Non-Perturbed ISS State")
-% xlabel("Time [sec]")
-% ylabel("|X_{Perturbed} - X_{2-Body}|")
-% grid("on")
+% Perform Integration
+[tx, Y] = ode45(@(t, r_state) Kepler_Peturbations(t, r_state, mu, srp, drag, start_epoch), ...
+                                                 tspan, iss_state, options);
+[tx1, Y1] = ode45(@(t, r_state) simple_kepler_orbit_pde(r_state, mu.earth), tspan, iss_state, options);
+
+% Plot The ISS
+figure(1)
+earth_radius = 6378e3;        % DIM: [m]
+[x_earth, y_earth, z_earth] = sphere;
+x_earth = x_earth * earth_radius;
+y_earth = y_earth * earth_radius;
+z_earth = z_earth * earth_radius;
+surf(x_earth, y_earth, z_earth, 'FaceColor', 'k');
+axis equal;
+hold on
+plot3(Y(:,1), Y(:,2), Y(:,3), 'DisplayName', 'With Perturbations')
+plot3(Y1(:,1), Y1(:,2), Y1(:,3), 'DisplayName', 'Without Perturbations')
+hold off
+title("ISS Orbit with Perturbations: Wasif Islam")
+xlabel("R1 [meters]");
+ylabel("R2 [meters]");
+zlabel("R3 [meters]");
+grid("on");
+legend()
+
+% Position Difference between 2-body and Perturbed
+position_diff = [Y(:,1) Y(:,2) Y(:,3)] - [Y1(:,1) Y1(:,2) Y1(:,3)];
+diff_norm = vecnorm(position_diff, 2, 2);
+
+figure(2)
+plot(tx(1:26500), diff_norm(1:26500))
+title("L_{2} Norm Difference between Perturbed and Non-Perturbed ISS State")
+xlabel("Time [sec]")
+ylabel("|X_{Perturbed} - X_{2-Body}|")
+grid("on")
 
 % Natural De-Orbit
 scaled_height = 58.2 * 1e3;       % Scaled Atmosphere Height [km]
