@@ -18,6 +18,7 @@ function [dxdt] = Kepler_Peturbations(t, r_state, mu, srp, drag, start_epoch)
     E = 1367;               % Solar Flux [W/m^2]
     c = 299792458;          % Speed of Light [m/s]
     OMEGA = 7.29e-5;        % Rotation Rate of Earth [rad/s]
+    J2 = -4.8416983732E-04; % J2 coefficient [Zonal]
 
     % Define Body State
     position = r_state(1:3, :);
@@ -46,7 +47,10 @@ function [dxdt] = Kepler_Peturbations(t, r_state, mu, srp, drag, start_epoch)
     % Calculate Drag
     v_prime = velocity - cross([0; 0; OMEGA], position);
     vp_unit = v_prime / norm(v_prime);
-    a_drag = -drag.rho * (drag.area / drag.mass) * norm(v_prime)^2 .* vp_unit; 
+    a_drag = -drag.rho * (drag.area / drag.mass) * norm(v_prime)^2 .* vp_unit;
+
+    % Calculate Earth Gravity Field
+    
 
     % Peturbed Acceleration Components
     a_peturbed = a_sun + a_moon + a_srp + a_drag;
