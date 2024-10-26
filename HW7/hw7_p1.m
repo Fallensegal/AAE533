@@ -39,3 +39,69 @@ iss_state = [1206.536023117490; 6341.948632667270; 2103.445062025980; ...
 tspan = [0, 10*ISS_PERIOD];
 options = odeset('RelTol',1e-12,'AbsTol',1e-12);
 
+% Perform Integration
+[tx, Y] = ode45(@(t, r_state) Kepler_Peturbations(t, r_state, mu, srp, drag, start_epoch), ...
+                                                 tspan, iss_state, options);
+[tx1, Y1] = ode45(@(t, r_state) simple_kepler_orbit_pde(r_state, mu.earth), tspan, iss_state, options);
+[tx2, Y2] = ode45(@(t, r_state) FULL_ORBITAL_MODEL(t, r_state, mu, srp, drag, start_epoch), ...
+                                                 tspan, iss_state, options);
+
+% Plot The ISS
+figure(1)
+earth_radius = 6378e3;        % DIM: [m]
+[x_earth, y_earth, z_earth] = sphere;
+x_earth = x_earth * earth_radius;
+y_earth = y_earth * earth_radius;
+z_earth = z_earth * earth_radius;
+surf(x_earth, y_earth, z_earth, 'FaceColor', 'k', 'DisplayName', 'Earth');
+axis equal;
+hold on
+plot3(Y(:,1), Y(:,2), Y(:,3), 'DisplayName', 'With Perturbations')
+plot3(Y1(:,1), Y1(:,2), Y1(:,3), 'DisplayName', 'Without Perturbations')
+plot3(Y2(:,1), Y2(:,2), Y2(:,3), 'DisplayName', 'J2 With Perturbations')
+hold off
+title("ISS Orbit with Perturbations: Wasif Islam")
+xlabel("R1 [meters]");
+ylabel("R2 [meters]");
+zlabel("R3 [meters]");
+grid("on");
+legend()
+
+% Visualize Diff
+
+figure(2)
+subplot(3,1,1)
+plot(tx, Y(:,1), 'DisplayName', "Point-Mass Perturbed")
+hold on
+plot(tx1, Y1(:,1), 'DisplayName', "Point-Mass Unperturbed")
+plot(tx2, Y2(:,1), 'DisplayName', "Gravity-Field Perturbed")
+hold off
+title("Position Vector X vs. Time")
+xlabel("Time [sec]")
+ylabel("R_{x} [meters]")
+grid("on")
+legend('Location', 'eastoutside')
+
+subplot(3,1,2)
+plot(tx, Y(:,2), 'DisplayName', "Point-Mass Perturbed")
+hold on
+plot(tx1, Y1(:,2), 'DisplayName', "Point-Mass Unperturbed")
+plot(tx2, Y2(:,2), 'DisplayName', "Gravity-Field Perturbed")
+hold off
+title("Position Vector Y vs. Time")
+xlabel("Time [sec]")
+ylabel("R_{y} [meters]")
+grid("on")
+legend('Location', 'eastoutside')
+
+subplot(3,1,3)
+plot(tx, Y(:,3), 'DisplayName', "Point-Mass Perturbed")
+hold on
+plot(tx1, Y1(:,3), 'DisplayName', "Point-Mass Unperturbed")
+plot(tx2, Y2(:,3), 'DisplayName', "Gravity-Field Perturbed")
+hold off
+title("Position Vector Z vs. Time")
+xlabel("Time [sec]")
+ylabel("R_{z} [meters]")
+grid("on")
+legend('Location', 'eastoutside')
