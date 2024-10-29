@@ -1,6 +1,6 @@
-% Differential Equation - Kepler N-Body with Drag and SRP
-% Desc: Differential equation describing the EoM of satellite orbiting
-% Earth
+% Differential Equation - Kepler Full Orbital Model
+% Desc: Differential equation governing full orbital model of a satellite
+% orbiting Earth
 %
 % Inputs:
 %   mu:     graviational parameter struct
@@ -11,7 +11,8 @@
 %   dxdt:   satellite state
 %
 
-function [dxdt] = Kepler_Peturbations(t, r_state, mu, srp, drag, start_epoch)
+function [dxdt] = FULL_ORBITAL_MODEL(t, r_state, mu, srp, drag, start_epoch)
+
     % Constants
     EARTH_RAD = 6378e3;     % Earth Radius [m]
     AU = 1.496e11;          % Astronomical Unit [m]
@@ -51,8 +52,11 @@ function [dxdt] = Kepler_Peturbations(t, r_state, mu, srp, drag, start_epoch)
     % Peturbed Acceleration Components
     a_peturbed = a_sun + a_moon + a_srp + a_drag;
 
+    % Earth Gravitation Field Model
+    a_grav_field = EarthGravField_A(position, current_epoch, mu.earth);
+
     % Derivative Sate
-    v_dot = ((-mu.earth ./ (position_norm^3)) * position) + a_peturbed;
+    v_dot = a_grav_field + a_peturbed;
     p_dot = velocity;
 
     dxdt = [p_dot; v_dot];

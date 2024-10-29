@@ -6,3 +6,6 @@ AU = 1.496e11;              % Astronomical Unit [m]
 Purdue.GD_LAT = 40.43157;          % Geodedic Latitude [deg]
 Purdue.GD_LONG = 273.085549;       % Geodedic Longitude [deg]
 Purdue.STATION_ALT = 192.5;      % Station Altitude [m]
+
+% Zonal Constants
+J2 = -4.8416983732E-04;         % Zonal Earth Gravity Field Constant
