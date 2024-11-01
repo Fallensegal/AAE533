@@ -13,7 +13,7 @@ load("constants.mat");
 %% Problem 1
 
 % Constant Definition
-num_samples = 2 * 1e2;
+num_samples = 2*1e2;
 
 % Object Definitions - Object A
 objA.mu = [153446.180;
@@ -52,6 +52,10 @@ objB.cov = [
    -5.902e-8,  3.419e-9, -6.072e-5, -1.448e-13,  4.492e-12,  3.392e-9
 ];
 
+% Position Covariance Matrix before Positive Semi-Definite Transformation
+Pa = objA.cov(1:3, 1:3);
+Pb = objB.cov(1:3, 1:3);
+
 objB.cov = (objA.cov + objA.cov') / 2;
 objB.cov = objA.cov + 1e-9 * eye(size(objA.cov));
 
@@ -63,12 +67,14 @@ objB.state_samples = mvnrnd(objB.mu, objB.cov, num_samples);
 
 % Propagate Orbits
 t0 = 0;
-tend = 86400;
+tend = 28800;
 dt = 5;
 tspan = t0:dt:tend;
 final_states = zeros(num_samples, 6);
 options = odeset('RelTol',1e-9,'AbsTol',1e-12);
 
+positionA = zeros(num_samples, length(tspan), 3);
+positionB = zeros(num_samples, length(tspan), 3);
 parfor i = 1:num_samples
     % Object A
     init_stateA = objA.state_samples(i, :);
@@ -81,8 +87,47 @@ parfor i = 1:num_samples
     positionB(i, :, :) = StateB(:, 1:3);
 end
 
+%% Calculate Instantaneous Probability - Monte Carlo
+pc_inst = calc_pc_inst(positionA, positionB, hardbody_radius_combined);
+
+% Plotting Probability vs. Time
+figure(1)
+plot(tspan, pc_inst, 'b')
+xlabel('Time [sec]')
+ylabel('PC_{inst}')
+title("Instantaneous Probability of Collision - Monte Carlo")
+grid on
+
+%% Analytical Solution to Short Encounter Time
+Pcombined = Pa + Pb;
+
+% Calculate Encounter Plane Unit Vectors
+ih = (objB.mu(1:3) - objA.mu(1:3)) / norm(objB.mu(1:3) - objA.mu(1:3));
+kh = (objB.mu(4:6) - objA.mu(4:6)) / norm(objB.mu(4:6) - objA.mu(4:6));
+jh = cross(-1 .* ih, kh);
+U = [ih, jh, kh];
+Penc = U' * Pcombined * U;
+P_2x2 = Penc(1:2, 1:2);
+
+% Calculate Alpha
+alpha = 0.5 * atan2((2 * P_2x2(1,2)), (P_2x2(1,1)^2 - P_2x2(2,2)^2));
+T = [cos(alpha), sin(alpha); -sin(alpha), cos(alpha)];
+Pdiag = T * P_2x2 * T';
+sig1 = sqrt(Pdiag(1,1));
+sig2 = sqrt(Pdiag(2,2));
+rho = hardbody_radius_combined;
+F = sig1/sig2;
+R = norm(objB.mu(1:3) - objA.mu(1:3));
+sig = sig1;
+
+% Calculate Integration
+q_integrand = @(theta) pateraInt(theta, alpha, rho, F, sig, R);
+result = integral(q_integrand, 0, 2*pi);
+
+fprintf("Cumulative Probability: %.5f\n", result)
+
 %% Creating Plots
-figure(1);
+figure(2);
 hold on;
 grid on;
 axis equal;
@@ -111,7 +156,7 @@ end
 legend('Location', 'eastoutside')
 hold off;
 
-figure(2)
+figure(3)
 hold on;
 grid on;
 axis equal;
@@ -129,7 +174,7 @@ set(scat_obj_b, 'XData', positionB(:,1,1), 'YData', positionB(:,1,2), 'ZData', p
 hold off
 legend('Location', 'eastoutside')
 
-figure(3)
+figure(4)
 hold on;
 grid on;
 axis equal;
