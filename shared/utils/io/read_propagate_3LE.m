@@ -1,6 +1,11 @@
 function [tle_dict_new] = read_propagate_3LE(filename, propagation_datetime)
     % Initialize an empty dictionary (containers.Map)
     tle_dict_new = dictionary();
+
+    % Time Constant
+    TT_ADJUST = seconds(64.184);
+    propagation_datetime_tt = propagation_datetime + TT_ADJUST;
+    JD_TT = juliandate(propagation_datetime_tt);
     
     % Open the file for reading
     fid = fopen(filename, 'r');
@@ -31,7 +36,13 @@ function [tle_dict_new] = read_propagate_3LE(filename, propagation_datetime)
 
             [~,r,~] = sgp4(satrec, tsince);
 
-            tle_dict_new = insert(tle_dict_new, sat_name, r);
+            % Convert to ECI Reference Frame
+            precession_matrix = calc_precession(JD_TT);
+            nutation_matrix = calc_nutation(JD_TT);
+            r_J2000 = precession_matrix' * nutation_matrix' * r';
+
+            tle_dict_new = insert(tle_dict_new, sat_name, {r_J2000});
+    
         end
     end
     
