@@ -12,6 +12,7 @@ load("constants.mat");
 
 %% Problem 4
 [GEO_INIT, epoch_time] = read_3le('GEO_TLE_HW9.txt');
+epoch_time = epoch_time{1};
 
 % Manual Input from TLE (angles in deg)
 GOES.inc = 9.2564;
@@ -40,13 +41,70 @@ x0 = GOES_ECI;
 [t1, StateA] = ode45(@(t, r_state) simple_kepler_orbit_pde(r_state, MU_EARTH), tspan, x0, options);
 
 % Propagate SGP4 Orbit
+TT_ADJUST = seconds(64.184);
 tspan_sgp4 = tspan ./ 60;
+sgp4_final_state = [];
 for i = 1:length(tspan_sgp4)
-    [~,r,~] = sgp4(GEO_INIT, tsince);
+    if i == 1
+        continue
+    end
+    [~,r,~] = sgp4(GEO_INIT{1}, tspan_sgp4(i));
 
-            % Convert to ECI Reference Frame
-            precession_matrix = calc_precession(JD_TT);
-            nutation_matrix = calc_nutation(JD_TT);
-            r_J2000 = precession_matrix' * nutation_matrix' * r';
+    % Adjust Time for TT Time
+    target_time = epoch_time + minutes(tspan_sgp4(i));
+    target_time_TT = target_time + TT_ADJUST;
 
-            tle_dict_new = insert(tle_dict_new, sat_name, {r_J2000});
+    JD_TT = juliandate(target_time_TT);
+
+    % Convert to ECI Reference Frame
+    precession_matrix = calc_precession(JD_TT);
+    nutation_matrix = calc_nutation(JD_TT);
+    r_J2000 = precession_matrix' * nutation_matrix' * r';
+    sgp4_final_state(i, :) = r_J2000;
+
+
+end
+
+% Plotting SGP4 vs Numerical Integration Outputs
+figure(1)
+hold on;
+axis equal;
+grid on;
+title("GOES 4 Orbit w.r.t Earth")
+xlabel('X Position (km)');
+ylabel('Y Position (km)');
+zlabel('Z Position (km)');
+
+[X, Y, Z] = sphere(50);
+X = X * (EARTH_RAD * 1e-3);
+Y = Y * (EARTH_RAD * 1e-3);
+Z = Z * (EARTH_RAD * 1e-3);
+surf(X, Y, Z, 'FaceColor', 'cyan', 'EdgeColor', 'none', 'FaceAlpha', 0.3, 'DisplayName', 'Earth');
+plot3(StateA(:,1), StateA(:,2), StateA(:,3), 'DisplayName', 'Numerical Integration')
+plot3(sgp4_final_state(:,1), sgp4_final_state(:,2), sgp4_final_state(:,3), 'DisplayName', 'SGP4')
+hold off
+
+% Plot X, Y, Z, Residuals
+figure(2)
+subplot(3,1,1)
+plot(tspan, StateA(:,1) - sgp4_final_state(:,1), 'r')
+title("X-Axis Position Diff: SGP4 vs. Numerical Integration")
+xlabel("Time [sec]")
+ylabel("X Residual [km]")
+grid on
+
+subplot(3,1,2)
+plot(tspan, StateA(:,2) - sgp4_final_state(:,2), 'g')
+title("Y-Axis Position Diff: SGP4 vs. Numerical Integration")
+xlabel("Time [sec]")
+ylabel("Y Residual [km]")
+grid on
+
+subplot(3,1,3)
+plot(tspan, StateA(:,3) - sgp4_final_state(:,3), 'b')
+title("Z-Axis Position Diff: SGP4 vs. Numerical Integration")
+xlabel("Time [sec]")
+ylabel("Z Residual [km]")
+grid on
+
+
