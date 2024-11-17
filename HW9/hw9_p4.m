@@ -57,3 +57,6 @@ colorbar;
 title('High Illumination Areas (Objects) in Cropped-Out Region');
 xlabel('x [px]');
 ylabel('y [px]');
+
+% Calculate Centroid
+[x,y] = calc2dcentroid(img, 1800, 800);
